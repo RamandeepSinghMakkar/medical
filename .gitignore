@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Flask instance folder
+instance/
+
+# Local environment variables / API keys
+.env
+*.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Pytest cache
+.pytest_cache/
+
+# Models or large files
+models/
+data/
+checkpoints/
+
+# Ignore secret keys accidentally
+*.key
+*.pem
+
+# Ignore compiled HTML/static cache
+staticfiles/
