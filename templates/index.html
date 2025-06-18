@@ -13,18 +13,20 @@
         <textarea name="transcript" rows="20">{{ transcript }}</textarea><br><br>
 
         <select name="task">
-            <option value="ner">NER & Keywords</option>
+            <option value="ner">Task1: NER & Keywords</option>
+            <option value="sentiment">Task2: Sentiment & Intent</option>
+            <option value="soap">Task3: SOAP Note</option>
             <option value="summarization">Summarization</option>
-            <option value="sentiment">Sentiment & Intent</option>
-            <option value="soap">SOAP Note</option>
         </select><br><br>
 
         <input type="submit" value="Run Task">
     </form>
 
-    {% if result %}
-        <h2>Result:</h2>
-        <pre>{{ result | tojson(indent=4) }}</pre>
-    {% endif %}
+   {% if result %}
+    <h2>Selected Task: {{ task|capitalize }}</h2>
+    <h3>Result:</h3>
+    <pre>{{ result | tojson(indent=2) }}</pre>
+{% endif %}
+
 </body>
 </html>

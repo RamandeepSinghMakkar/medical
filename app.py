@@ -21,10 +21,12 @@ with open(SAMPLE_FILE, 'r') as file:
 def index():
     result = None
     text = sample_text  # default text loaded
+    selected_task = None  # store selected task
 
     if request.method == 'POST':
         text = request.form['transcript']
         task = request.form['task']
+        selected_task = task  # store selected task
 
         if task == 'ner':
             result = {
@@ -40,7 +42,8 @@ def index():
 
     message = "Enter the transcription text:"
 
-    return render_template('index.html', result=result, transcript=text, message=message)
+    return render_template('index.html', result=result, transcript=text, message=message, task=selected_task)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
