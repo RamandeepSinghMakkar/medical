@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <title>Physician App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Medical Note Extraction App</h1>
+
+    <p style="color:blue;">{{ message }}</p>
+
+    <form method="post">
+        <textarea name="transcript" rows="20">{{ transcript }}</textarea><br><br>
+
+        <select name="task">
+            <option value="ner">NER & Keywords</option>
+            <option value="summarization">Summarization</option>
+            <option value="sentiment">Sentiment & Intent</option>
+            <option value="soap">SOAP Note</option>
+        </select><br><br>
+
+        <input type="submit" value="Run Task">
+    </form>
+
+    {% if result %}
+        <h2>Result:</h2>
+        <pre>{{ result | tojson(indent=4) }}</pre>
+    {% endif %}
+</body>
+</html>
