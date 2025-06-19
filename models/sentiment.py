@@ -15,8 +15,9 @@ intent_labels = [
 ]
 
 
-def classify_intent(text):
-    return intent_clf(text)[0]['label']
+def classify_intent(sentences):
+    results = intent_clf(sentences)
+    return [res['label'] for res in results]
 
 
 # Load spaCy for sentence splitting
@@ -44,15 +45,18 @@ def classify_sentiment(sentence):
         return "Reassured"
 
 
-
 def analyze_sentiment_intent(text):
     doc = nlp_spacy(text)
+    sentences = [sent.text for sent in doc.sents]
+
+    # Batch classify intents
+    intent_labels_list = classify_intent(sentences)
+
     sentiments = []
     intents = []
 
-    for sent in doc.sents:
-        sentiment = classify_sentiment(sent.text)
-        intent = classify_intent(sent.text)
+    for sent_text, intent in zip(sentences, intent_labels_list):
+        sentiment = classify_sentiment(sent_text)
         sentiments.append(sentiment)
         intents.append(intent)
 
