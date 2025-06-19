@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 import spacy
 from keybert import KeyBERT
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-# Load spacy model (for preprocessing, optional)
+# Load Spacy model
 nlp_spacy = spacy.load("en_core_web_sm")
 
 # Load KeyBERT model for keywords
@@ -17,7 +18,7 @@ kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama3-70b-8192"
 
-
+# --- Keyword extraction function ---
 def extract_keywords(text, top_n=10):
     doc = nlp_spacy(text)
     cleaned_text = " ".join([sent.text for sent in doc.sents])
@@ -25,24 +26,8 @@ def extract_keywords(text, top_n=10):
     keyword_list = [kw[0] for kw in keywords]
     return keyword_list
 
+# --- NER extraction using Groq function calling ---
 def extract_entities(text):
-    system_prompt = """
-You are a medical assistant. Extract the following information from the provided transcript of a physician-patient conversation. 
-
-Output strictly in the following JSON format:
-
-{
-  "Patient_Name": "",
-  "Symptoms": [],
-  "Diagnosis": "",
-  "Treatment": [],
-  "Current_Status": "",
-  "Prognosis": ""
-}
-
-If any field is not present, keep it empty.
-"""
-
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -51,29 +36,42 @@ If any field is not present, keep it empty.
     payload = {
         "model": GROQ_MODEL,
         "messages": [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": "You are a medical assistant."},
             {"role": "user", "content": text}
         ],
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "extract_medical_entities",
+                    "description": "Extract relevant medical information from the conversation.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "Patient_Name": {"type": "string"},
+                            "Symptoms": {"type": "array", "items": {"type": "string"}},
+                            "Diagnosis": {"type": "string"},
+                            "Treatment": {"type": "array", "items": {"type": "string"}},
+                            "Current_Status": {"type": "string"},
+                            "Prognosis": {"type": "string"},
+                        },
+                        "required": [
+                            "Patient_Name", "Symptoms", "Diagnosis",
+                            "Treatment", "Current_Status", "Prognosis"
+                        ]
+                    }
+                }
+            }
+        ],
+        "tool_choice": {"type": "function", "function": {"name": "extract_medical_entities"}},
         "temperature": 0.0
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
-        content = response.json()["choices"][0]["message"]["content"]
-
-        import json
-        try:
-            result = json.loads(content)
-        except:
-            result = {
-                "Patient_Name": "",
-                "Symptoms": [],
-                "Diagnosis": "",
-                "Treatment": [],
-                "Current_Status": "",
-                "Prognosis": ""
-            }
+        function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+        result = json.loads(function_args)
     else:
         print("Error:", response.text)
         result = {

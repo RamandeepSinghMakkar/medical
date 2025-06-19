@@ -1,49 +1,45 @@
-from flask import Flask, render_template, request
+import streamlit as st
 import os
-import requests
-import json
 
 from models.ner import extract_entities, extract_keywords
 from models.summarizer import summarize_text
 from models.sentiment import analyze_sentiment_intent
 from models.soap import generate_soap_note
 
-app = Flask(__name__)
+# Load sample file
+sample_text = open('sample.txt', 'r').read()
 
-# Load sample.txt correctly from project directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SAMPLE_FILE = os.path.join(BASE_DIR, "sample.txt")
+st.title("🩺 Physician Note Generator")
 
-with open(SAMPLE_FILE, 'r') as file:
-    sample_text = file.read()
+st.write("### Paste or edit transcript:")
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    result = None
-    text = sample_text  # default text loaded
-    selected_task = None  # store selected task
+text = st.text_area("Transcript", sample_text, height=400)
 
-    if request.method == 'POST':
-        text = request.form['transcript']
-        task = request.form['task']
-        selected_task = task  # store selected task
+task = st.selectbox("Select Task:", [
+    "Task 1: Named Entity Recognition",
+    "Task 2: Sentiment & Intent Analysis",
+    "Task 3: SOAP Note Generation (Bonus)",
+    "Task 4: Summarization"
+])
 
-        if task == 'ner':
-            result = {
-                'entities': extract_entities(text),
-                'keywords': extract_keywords(text)
-            }
-        elif task == 'summarization':
-            result = summarize_text(text)
-        elif task == 'sentiment':
-            result = analyze_sentiment_intent(text)
-        elif task == 'soap':
-            result = generate_soap_note(text)
-
-    message = "Enter the transcription text:"
-
-    return render_template('index.html', result=result, transcript=text, message=message, task=selected_task)
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if st.button("Run Task"):
+    with st.spinner("Processing..."):
+        if task.startswith("Task 1"):
+            ner = extract_entities(text)
+            keywords = extract_keywords(text)
+            st.subheader("Named Entities")
+            st.json(ner)
+            st.subheader("Keywords")
+            st.write(keywords)
+        elif task.startswith("Task 2"):
+            sentiment = analyze_sentiment_intent(text)
+            st.subheader("Sentiment & Intent")
+            st.json(sentiment)
+        elif task.startswith("Task 3"):
+            soap = generate_soap_note(text)
+            st.subheader("SOAP Note")
+            st.json(soap)
+        elif task.startswith("Task 4"):
+            summary = summarize_text(text)
+            st.subheader("Summary")
+            st.write(summary)
