@@ -71,8 +71,12 @@ def extract_entities(text):
 
     if response.status_code == 200:
         try:
-            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
-            raw_result = json.loads(function_args)
+            function_args_raw = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+            # Some Groq versions return already dict, others return stringified JSON
+            if isinstance(function_args_raw, str):
+                raw_result = json.loads(function_args_raw)
+            else:
+                raw_result = function_args_raw
             result = normalize_ner_structure(raw_result)
         except Exception as e:
             print("JSON parsing failed:", e)
@@ -83,20 +87,21 @@ def extract_entities(text):
 
     return result
 
+# Normalize dictionary-to-list
 def normalize_array(field):
-    # If it's already list, return as is
     if isinstance(field, list):
         return field
-    # If it's dict with numeric keys, convert to list
-    if isinstance(field, dict):
+    elif isinstance(field, dict):
         try:
-            items = sorted(field.items(), key=lambda x: int(x[0]))
-            return [v for k, v in items]
+            # sort by keys, keys should be numeric strings
+            sorted_items = sorted(field.items(), key=lambda x: int(x[0]))
+            return [v for k, v in sorted_items]
         except:
-            pass
-    # Fallback: return empty list
-    return []
+            return []
+    else:
+        return []
 
+# Normalize the whole output
 def normalize_ner_structure(raw):
     return {
         "Patient_Name": raw.get("Patient_Name", ""),
@@ -107,6 +112,7 @@ def normalize_ner_structure(raw):
         "Prognosis": raw.get("Prognosis", "")
     }
 
+# Default empty output fallback
 def empty_ner_structure():
     return {
         "Patient_Name": "",
