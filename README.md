@@ -1,21 +1,25 @@
-# medical
-Live Link: https://medical-ramandeepemitrr.streamlit.app  
-Note: The app may sleep due to inactivity(because I am using a free tier) . Please activate it and then refresh the page after 2 minutes. 
+# 🩺 **Medical NLP Application**
 
-## **1. Medical NLP Summarization**
+**Live Link:** [https://medical-ramandeepemitrr.streamlit.app](https://medical-ramandeepemitrr.streamlit.app)
+
+> **Note:** The app may sleep due to inactivity (because I am using a free tier). Please activate it and then refresh the page after 2 minutes.
+
+---
+
+## **1️⃣ Medical NLP Summarization**
 
 **Task:** Implement an NLP pipeline to **extract medical details** from the transcribed conversation.
 
-NER: Implemented using Groq Llama3-70B API for highly accurate extraction.
-Keyword Extraction: Done using spaCy and KeyBERT (sentence-transformers model used).
-Summarization: Done using BART (facebook/bart-large-cnn) Transformer-based summarization.
+- **NER:** Implemented using **Groq Llama3-70B API** for highly accurate extraction.
+- **Keyword Extraction:** Done using **spaCy** and **KeyBERT** (sentence-transformers model used).
+- **Summarization:** Done using **BART (facebook/bart-large-cnn)** Transformer-based summarization.
 
-For reference:
-For given sample text in the Assignemnt:
+For reference:  
+For given sample text in the Assignment:  
 <img width="638" alt="image" src="https://github.com/user-attachments/assets/e27ebb3d-56df-4924-9158-6fc0376fdcf8" />
 
 ```bash
-Suppose for given text
+Suppose for given text:
 Patient – Good afternoon, Doctor.
 Doctor – Good afternoon Rahul. How can I assist you today?
 Patient – I have been feeling constantly thirsty and tired recently. I also noticed that I have been losing weight without any effort.
