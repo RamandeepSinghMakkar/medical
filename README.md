@@ -27,15 +27,18 @@ Doctor – Good afternoon Rahul. How can I assist you today?
 Patient – I have been feeling constantly thirsty and tired recently. I also noticed that I have been losing weight without any effort.
 Doctor – I see. Let's run some tests to find out what's going on. It could be diabetes, but we need to confirm it.
 Patient – I understand, doctor. I'll await the test results.
-Doctor – Good. In the meantime, try to eat a balanced diet and get regular exercise. These are good practices whether you have diabetes or not.
+Doctor – Based on your symptoms, if it is diabetes, with proper treatment and lifestyle changes, it can be well-managed. The long-term outlook is generally positive if controlled early.
+Patient – That sounds reassuring, doctor.
+Doctor – Yes. In the meantime, try to eat a balanced diet, monitor your sugar intake, and get regular exercise. These are good practices whether you have diabetes or not.
 Patient – I will do my best, doctor. Thank you.
 Doctor – You're welcome. Take care.
 ```
 
 **Output:**
 
-<img width="589" alt="image" src="https://github.com/user-attachments/assets/7d8b1ae3-2b64-4c48-8ef5-ce9e92a8a59f" />
+<img width="556" alt="image" src="https://github.com/user-attachments/assets/a1fb1517-8078-4ab2-9630-581099ce8aa6" />
 
+Sample Video: https://github.com/user-attachments/assets/70fac231-d9a9-46fc-afad-8b760dd2e20a
 
 ### QUES-1 **How would you handle ambiguous or missing medical data in the transcript?**
 
@@ -82,6 +85,8 @@ I've been coughing for two days and have a slight fever.
 **Output:**
 
 <img width="549" alt="image" src="https://github.com/user-attachments/assets/55ef2ef7-7057-4e57-ae05-4f989f17b9ab" />
+
+Sample Video: https://github.com/user-attachments/assets/819f8139-f78c-4019-a3ef-8c4f95fcebf9
 
 
 
