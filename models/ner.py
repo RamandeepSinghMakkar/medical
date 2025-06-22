@@ -83,15 +83,26 @@ def extract_entities(text):
 
     return result
 
+def normalize_array(field):
+    # If it's already list, return as is
+    if isinstance(field, list):
+        return field
+    # If it's dict with numeric keys, convert to list
+    if isinstance(field, dict):
+        try:
+            items = sorted(field.items(), key=lambda x: int(x[0]))
+            return [v for k, v in items]
+        except:
+            pass
+    # Fallback: return empty list
+    return []
+
 def normalize_ner_structure(raw):
-    """
-    Normalize the extracted entity result into correct key order
-    """
     return {
         "Patient_Name": raw.get("Patient_Name", ""),
-        "Symptoms": raw.get("Symptoms", []),
+        "Symptoms": normalize_array(raw.get("Symptoms", [])),
         "Diagnosis": raw.get("Diagnosis", ""),
-        "Treatment": raw.get("Treatment", []),
+        "Treatment": normalize_array(raw.get("Treatment", [])),
         "Current_Status": raw.get("Current_Status", ""),
         "Prognosis": raw.get("Prognosis", "")
     }
