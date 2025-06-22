@@ -5,99 +5,102 @@ import spacy
 from keybert import KeyBERT
 from dotenv import load_dotenv
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
-# Load Spacy model
+# Load models
 nlp_spacy = spacy.load("en_core_web_sm")
-
-# Load KeyBERT model for keywords
 kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 
-# Read Groq API key from environment variable
+# Groq API details
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama3-8b-8192"  # you can switch to 70b later if needed
 
-# --- Keyword extraction function ---
-def extract_keywords(text, top_n=10):
+# ----------- Fast Preprocessing Step -------------
+def preprocess(text):
     doc = nlp_spacy(text)
-    cleaned_text = " ".join([sent.text for sent in doc.sents])
-    keywords = kw_model.extract_keywords(cleaned_text, keyphrase_ngram_range=(1, 3), stop_words='english', top_n=top_n)
+    # Extract named entities from spaCy (weak but fast)
+    entities = [ent.text for ent in doc.ents]
+    # Extract keywords from KeyBERT
+    keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 3), stop_words='english', top_n=10)
     keyword_list = [kw[0] for kw in keywords]
-    return keyword_list
 
-# --- NER extraction using Groq function calling ---
-def extract_entities(text):
+    # Summarize to send smaller input to Groq
+    summary = {
+        "Entities": entities,
+        "Keywords": keyword_list
+    }
+    return summary
+
+# ----------- Groq LLM extraction -------------
+def extract_entities_with_groq(text, summary):
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
+    system_prompt = f"""
+You are a medical assistant. Extract key medical information based on the following conversation and extracted keywords/entities:
+
+Conversation: {text}
+
+Entities extracted: {summary['Entities']}
+Keywords extracted: {summary['Keywords']}
+
+Return output strictly in valid JSON format like this:
+
+{{
+  "Patient_Name": "",
+  "Symptoms": [],
+  "Diagnosis": "",
+  "Treatment": [],
+  "Current_Status": "",
+  "Prognosis": ""
+}}
+
+Rules:
+- Output only valid JSON, no explanations.
+- If any field is missing, leave empty string or empty list.
+"""
+
     payload = {
         "model": GROQ_MODEL,
         "messages": [
-            {"role": "system", "content": "You are a medical assistant."},
-            {"role": "user", "content": text}
+            {"role": "system", "content": system_prompt}
         ],
-        "tools": [
-            {
-                "type": "function",
-                "function": {
-                    "name": "extract_medical_entities",
-                    "description": "Extract relevant medical information from the conversation.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "Patient_Name": {"type": "string"},
-                            "Symptoms": {"type": "array", "items": {"type": "string"}},
-                            "Diagnosis": {"type": "string"},
-                            "Treatment": {"type": "array", "items": {"type": "string"}},
-                            "Current_Status": {"type": "string"},
-                            "Prognosis": {"type": "string"},
-                        },
-                        "required": [
-                            "Patient_Name", "Symptoms", "Diagnosis",
-                            "Treatment", "Current_Status", "Prognosis"
-                        ]
-                    }
-                }
-            }
-        ],
-        "tool_choice": {"type": "function", "function": {"name": "extract_medical_entities"}},
-        "temperature": 0.0
+        "temperature": 0.0,
+        "max_tokens": 1024
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
         try:
-            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
-            raw_result = json.loads(function_args)
-            result = normalize_ner_structure(raw_result)
+            raw_output = response.json()["choices"][0]["message"]["content"].strip()
+            if raw_output.startswith("```json"):
+                raw_output = raw_output.replace("```json", "").replace("```", "").strip()
+            result = json.loads(raw_output)
+            return normalize_ner_structure(result)
         except Exception as e:
             print("JSON parsing failed:", e)
-            result = empty_ner_structure()
+            return empty_ner_structure()
     else:
-        print("API Error:", response.text)
-        result = empty_ner_structure()
+        print("Groq API Error:", response.text)
+        return empty_ner_structure()
 
-    return result
-
-def normalize_array(field):
-    # If it's already list, return as is
-    if isinstance(field, list):
-        return field
-    # If it's dict with numeric keys, convert to list
-    if isinstance(field, dict):
-        try:
-            items = sorted(field.items(), key=lambda x: int(x[0]))
-            return [v for k, v in items]
-        except:
-            pass
-    # Fallback: return empty list
-    return []
-
+# ----------- Normalization -------------
 def normalize_ner_structure(raw):
+    def normalize_array(field):
+        if isinstance(field, list):
+            return field
+        if isinstance(field, dict):
+            try:
+                items = sorted(field.items(), key=lambda x: int(x[0]))
+                return [v for k, v in items]
+            except:
+                pass
+        return []
+
     return {
         "Patient_Name": raw.get("Patient_Name", ""),
         "Symptoms": normalize_array(raw.get("Symptoms", [])),
@@ -116,3 +119,9 @@ def empty_ner_structure():
         "Current_Status": "",
         "Prognosis": ""
     }
+
+# ----------- Full Pipeline -------------
+def extract_medical_info(text):
+    summary = preprocess(text)
+    result = extract_entities_with_groq(text, summary)
+    return result
