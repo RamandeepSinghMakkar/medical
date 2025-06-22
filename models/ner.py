@@ -14,7 +14,7 @@ kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 
 # Groq API details
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama3-70b-8192"   # You can also use 8b if you want lighter
 
 # --- Keyword extraction function ---
 def extract_keywords(text, top_n=10):
@@ -24,7 +24,7 @@ def extract_keywords(text, top_n=10):
     keyword_list = [kw[0] for kw in keywords]
     return keyword_list
 
-# --- NER extraction using Groq function calling ---
+# --- NER extraction function using FAST FUNCTION CALLING ---
 def extract_entities(text):
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -37,31 +37,24 @@ def extract_entities(text):
             {"role": "system", "content": "You are a medical assistant."},
             {"role": "user", "content": text}
         ],
-        "tools": [
+        "functions": [
             {
-                "type": "function",
-                "function": {
-                    "name": "extract_medical_entities",
-                    "description": "Extract relevant medical information from the conversation.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "Patient_Name": {"type": "string"},
-                            "Symptoms": {"type": "array", "items": {"type": "string"}},
-                            "Diagnosis": {"type": "string"},
-                            "Treatment": {"type": "array", "items": {"type": "string"}},
-                            "Current_Status": {"type": "string"},
-                            "Prognosis": {"type": "string"},
-                        },
-                        "required": [
-                            "Patient_Name", "Symptoms", "Diagnosis",
-                            "Treatment", "Current_Status", "Prognosis"
-                        ]
+                "name": "extract_medical_entities",
+                "description": "Extract relevant medical information from the conversation.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "Patient_Name": {"type": "string"},
+                        "Symptoms": {"type": "array", "items": {"type": "string"}},
+                        "Diagnosis": {"type": "string"},
+                        "Treatment": {"type": "array", "items": {"type": "string"}},
+                        "Current_Status": {"type": "string"},
+                        "Prognosis": {"type": "string"}
                     }
                 }
             }
         ],
-        "tool_choice": {"type": "function", "function": {"name": "extract_medical_entities"}},
+        "function_call": {"name": "extract_medical_entities"},
         "temperature": 0.0
     }
 
@@ -69,7 +62,7 @@ def extract_entities(text):
 
     if response.status_code == 200:
         try:
-            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+            function_args = response.json()["choices"][0]["message"]["function_call"]["arguments"]
             raw_result = json.loads(function_args)
             result = normalize_ner_structure(raw_result)
         except Exception as e:
