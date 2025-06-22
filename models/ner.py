@@ -14,33 +14,26 @@ kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 
 # Groq API details
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"  # you can switch to 70b later if needed
+GROQ_MODEL = "llama3-8b-8192"
 
-# ----------- Fast Preprocessing Step -------------
-def preprocess(text):
+# --- Keyword extraction function ---
+def extract_keywords(text, top_n=10):
     doc = nlp_spacy(text)
-    # Extract named entities from spaCy (weak but fast)
-    entities = [ent.text for ent in doc.ents]
-    # Extract keywords from KeyBERT
-    keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 3), stop_words='english', top_n=10)
+    cleaned_text = " ".join([sent.text for sent in doc.sents])
+    keywords = kw_model.extract_keywords(cleaned_text, keyphrase_ngram_range=(1, 3), stop_words='english', top_n=top_n)
     keyword_list = [kw[0] for kw in keywords]
+    return keyword_list
 
-    # Summarize to send smaller input to Groq
-    summary = {
-        "Entities": entities,
-        "Keywords": keyword_list
-    }
-    return summary
-
-# ----------- Groq LLM extraction -------------
-def extract_entities_with_groq(text, summary):
+# --- NER extraction using Groq optimized ---
+def extract_entities(text):
+    summary = preprocess(text)
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
     system_prompt = f"""
-You are a medical assistant. Extract key medical information based on the following conversation and extracted keywords/entities:
+You are a medical assistant. Extract key medical information from the following conversation and helpful extracted keywords/entities:
 
 Conversation: {text}
 
@@ -59,8 +52,9 @@ Return output strictly in valid JSON format like this:
 }}
 
 Rules:
-- Output only valid JSON, no explanations.
+- Output only valid JSON.
 - If any field is missing, leave empty string or empty list.
+- Do NOT return numbered lists or dictionaries inside arrays.
 """
 
     payload = {
@@ -88,7 +82,17 @@ Rules:
         print("Groq API Error:", response.text)
         return empty_ner_structure()
 
-# ----------- Normalization -------------
+# --- Preprocessing ---
+def preprocess(text):
+    doc = nlp_spacy(text)
+    entities = [ent.text for ent in doc.ents]
+    keywords = extract_keywords(text, top_n=10)
+    return {
+        "Entities": entities,
+        "Keywords": keywords
+    }
+
+# --- Normalization ---
 def normalize_ner_structure(raw):
     def normalize_array(field):
         if isinstance(field, list):
@@ -100,7 +104,6 @@ def normalize_ner_structure(raw):
             except:
                 pass
         return []
-
     return {
         "Patient_Name": raw.get("Patient_Name", ""),
         "Symptoms": normalize_array(raw.get("Symptoms", [])),
@@ -119,9 +122,3 @@ def empty_ner_structure():
         "Current_Status": "",
         "Prognosis": ""
     }
-
-# ----------- Full Pipeline -------------
-def extract_medical_info(text):
-    summary = preprocess(text)
-    result = extract_entities_with_groq(text, summary)
-    return result
