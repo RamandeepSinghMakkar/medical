@@ -1,4 +1,4 @@
-# 🩺 **Medical NLP Application**
+# 🩺 **Physician Notetaker**
 
 **Live Link:** [https://medical-ramandeepemitrr.streamlit.app](https://medical-ramandeepemitrr.streamlit.app)
 
@@ -30,6 +30,7 @@ Patient – I will do my best, doctor. Thank you.
 Doctor – You're welcome. Take care.
 ```
 Output: 
+<img width="589" alt="image" src="https://github.com/user-attachments/assets/7d8b1ae3-2b64-4c48-8ef5-ce9e92a8a59f" />
 
 ---
 
@@ -113,15 +114,23 @@ For given sample text in the Assignment:
 
 ```bash
 Suppose for given text:
-Patient – Good afternoon, Doctor.
-Doctor – Good afternoon Rahul. How can I assist you today?
-Patient – I have been feeling constantly thirsty and tired recently. I also noticed that I have been losing weight without any effort.
-Doctor – I see. Let's run some tests to find out what's going on. It could be diabetes, but we need to confirm it.
-Patient – I understand, doctor. I'll await the test results.
-Doctor – Good. In the meantime, try to eat a balanced diet and get regular exercise. These are good practices whether you have diabetes or not.
-Patient – I will do my best, doctor. Thank you.
-Doctor – You're welcome. Take care.
+Patient: Hello Doctor.
+Doctor: Hello Ananya, what seems to be the problem?
+Patient: I’ve been having a persistent cough for the past two weeks, along with occasional shortness of breath.
+Doctor: Any fever or chest pain?
+Patient: No fever, but sometimes I feel a bit tightness in my chest.
+Doctor: Alright. Let me examine you. (performs physical exam)
+Doctor: Your lungs have mild wheezing sounds, but no crackles or rales. Oxygen saturation is normal at 98%. Heart sounds are normal.
+Doctor: This could be bronchitis or early asthma. We’ll do a chest X-ray and some pulmonary function tests to confirm.
+Patient: Okay doctor. Should I take any medication?
+Doctor: I’ll prescribe a mild bronchodilator and some cough syrup for now. Avoid cold drinks, dust exposure, and strenuous activity.
+Doctor: The current severity seems mild to moderate based on your symptoms and examination.
+Patient: Got it. Thank you, doctor.
+Doctor: You’re welcome. We’ll review the test results soon.
 ```
+OUPUT:
+<img width="589" alt="image" src="https://github.com/user-attachments/assets/765863c3-d15b-41e1-9512-ff92687b7c44" />
+
 
 
 ### QUES-1 **How would you train an NLP model to map medical transcripts into SOAP format?**
