@@ -147,7 +147,7 @@ Doctor: You’re welcome. We’ll review the test results soon.
 
 <img width="589" alt="image" src="https://github.com/user-attachments/assets/765863c3-d15b-41e1-9512-ff92687b7c44" />
 
-
+Sample Video: https://github.com/user-attachments/assets/ab881a76-f494-4366-82e6-463d7fa98ba6
 
 ### QUES-1 **How would you train an NLP model to map medical transcripts into SOAP format?**
 
