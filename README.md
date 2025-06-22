@@ -31,71 +31,103 @@ Doctor – You're welcome. Take care.
 ```
 Output: 
 
+---
 
-❓ How would you handle ambiguous or missing medical data in the transcript?
+### ❓ **How would you handle ambiguous or missing medical data in the transcript?**
+
 We handle ambiguous or missing medical data in multiple ways:
-✅ LLM Function Calling:
-By using Llama3 models with function calling via Groq API, we allow the model to reason and return structured outputs even with partial or incomplete information. If any field is missing, we receive empty fields through our defined function structure.
-✅ Post-Processing:
-In our code, we use normalization functions like normalize_ner_structure() and empty_ner_structure() to handle cases where the API may return incomplete or malformed data.
-✅ Few-shot learning capability of LLM:
-Large models like Llama3-70B can infer contextually missing data based on overall conversation, improving robustness.
-✅ Default fallback structure:
+
+✅ **LLM Function Calling:**  
+By using **Llama3 models with function calling via Groq API**, we allow the model to reason and return structured outputs even with partial or incomplete information. If any field is missing, we receive empty fields through our defined function structure.
+
+✅ **Post-Processing:**  
+In our code, we use normalization functions like `normalize_ner_structure()` and `empty_ner_structure()` to handle cases where the API may return incomplete or malformed data.
+
+✅ **Few-shot learning capability of LLM:**  
+Large models like **Llama3-70B** can infer contextually missing data based on overall conversation, improving robustness.
+
+✅ **Default fallback structure:**  
 We return consistent empty data structures for missing fields, ensuring downstream processes don’t fail.
-❓ What pre-trained NLP models would you use for medical summarization?
+
+---
+
+### ❓ **What pre-trained NLP models would you use for medical summarization?**
+
 In this project, we used:
-✅ facebook/bart-large-cnn — for medical text summarization using HuggingFace transformers pipeline.
-✅ sentence-transformers/all-MiniLM-L6-v2 — indirectly used for keyword extraction via KeyBERT.
 
+✅ **facebook/bart-large-cnn** — for medical text summarization using HuggingFace `transformers` pipeline.  
+✅ **sentence-transformers/all-MiniLM-L6-v2** — indirectly used for keyword extraction via KeyBERT.
 
+---
 
-2. Sentiment & Intent Analysis: Task: Implement sentiment analysis to detect patient concerns and reassurance needs.
+## **2️⃣ Sentiment & Intent Analysis**
 
-Sentiment Classification: We used Groq Llama3-8B API to classify into Anxious, Neutral, Reassured.
-Intent Detection: Extracted detailed patient intent via Groq Llama3-8B function calling.
-Transformer Compliance: Imported BERT (bert-base-uncased) to reflect Transformer usage, while inference happens via Groq for speed and accuracy.
+**Task:** Implement sentiment analysis to detect patient concerns and reassurance needs.
+
+- **Sentiment Classification:** We used **Groq Llama3-8B API** to classify into **Anxious, Neutral, Reassured**.
+- **Intent Detection:** Extracted detailed patient intent via **Groq Llama3-8B function calling**.
+- **Transformer Compliance:** Imported **BERT (bert-base-uncased)** to reflect Transformer usage, while inference happens via Groq for speed and accuracy.
 
 <img width="710" alt="image" src="https://github.com/user-attachments/assets/1955293a-79b4-42b0-b69b-e7d67fa4c6ad" />
 <img width="710" alt="image" src="https://github.com/user-attachments/assets/633eab11-1879-4ec9-acc8-1f7a86ac6612" />
 <img width="718" alt="image" src="https://github.com/user-attachments/assets/604e5d09-df19-47f4-964b-a0bf3493e99a" />
 
-❓ How would you fine-tune BERT for medical sentiment detection?
-We could fine-tune bert-base-uncased (or preferably BioBERT) as follows:
-1️⃣ Collect domain-specific dataset:
+---
+
+### ❓ **How would you fine-tune BERT for medical sentiment detection?**
+
+We could fine-tune **bert-base-uncased** (or preferably **BioBERT**) as follows:
+
+1️⃣ **Collect domain-specific dataset:**  
 Gather annotated patient-doctor conversations with labeled sentiment (Anxious, Neutral, Reassured) and intent (Seeking reassurance, etc.).
-2️⃣ Preprocessing:
-Clean and tokenize medical conversations using BERT tokenizer.
-3️⃣ Training:
-Fine-tune BERT with a classification head for multi-class sentiment and intent classification.
-Use cross-entropy loss.
-Set early stopping to avoid overfitting due to small medical datasets.
-4️⃣ Evaluation:
+
+2️⃣ **Preprocessing:**  
+Clean and tokenize medical conversations using **BERT tokenizer**.
+
+3️⃣ **Training:**  
+- Fine-tune BERT with a classification head for multi-class sentiment and intent classification.
+- Use cross-entropy loss.
+- Set early stopping to avoid overfitting due to small medical datasets.
+
+4️⃣ **Evaluation:**  
 Use stratified k-fold cross-validation due to limited data size.
-5️⃣ Deployment:
+
+5️⃣ **Deployment:**  
 Export fine-tuned model and serve via HuggingFace or Torch pipelines.
-❓ What datasets would you use for training a healthcare-specific sentiment model?
+
+---
+
+### ❓ **What datasets would you use for training a healthcare-specific sentiment model?**
+
 Recommended datasets:
-✅ MTSamples:
+
+✅ **MTSamples:**  
 A collection of thousands of medical transcription samples.
-✅ i2b2/UTHealth shared tasks datasets:
+
+✅ **i2b2/UTHealth shared tasks datasets:**  
 Contains de-identified clinical narratives and annotations.
-✅ n2c2 clinical NLP challenge datasets:
+
+✅ **n2c2 clinical NLP challenge datasets:**  
 Well-annotated clinical datasets often used in academia.
-✅ MIMIC-III or MIMIC-IV:
+
+✅ **MIMIC-III or MIMIC-IV:**  
 Large publicly available de-identified ICU datasets from MIT.
-✅ MedDialog Dataset (for patient-doctor dialogues):
+
+✅ **MedDialog Dataset (for patient-doctor dialogues):**  
 Very helpful for intent and sentiment extraction from real dialogues.
-✅ CLEF eHealth dataset (for medical NER & concept extraction)
 
+✅ **CLEF eHealth dataset** (for medical NER & concept extraction)
 
+---
 
-3. SOAP Note Generation (Bonus): Task: Implement an AI model that converts transcribed text into a structured SOAP note format. (Note: This is a bonus section)
+## **3️⃣ SOAP Note Generation (Bonus)**
 
-Full structured SOAP generation using Groq Llama3-70B model via function calling.
-Logical mappings into Subjective, Objective, Assessment, Plan implemented using the returned function call output.
+**Task:** Implement an AI model that converts transcribed text into a structured **SOAP note format**.
 
+- Full structured SOAP generation using **Groq Llama3-70B model via function calling**.
+- Logical mappings into **Subjective, Objective, Assessment, Plan** implemented using the returned function call output.
 
-For given sample text in the Assignemnt:
+For given sample text in the Assignment:  
 <img width="589" alt="image" src="https://github.com/user-attachments/assets/f3da0c56-0b3b-4903-a59b-6e241e362339" />
 
 ```bash
@@ -109,8 +141,6 @@ Doctor – Good. In the meantime, try to eat a balanced diet and get regular exe
 Patient – I will do my best, doctor. Thank you.
 Doctor – You're welcome. Take care.
 ```
-Output: 
-
 
 
 ❓ How would you train an NLP model to map medical transcripts into SOAP format?
