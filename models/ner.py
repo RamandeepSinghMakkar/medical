@@ -18,7 +18,6 @@ kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama3-8b-8192"
 
-
 # --- Keyword extraction function ---
 def extract_keywords(text, top_n=10):
     doc = nlp_spacy(text)
@@ -71,17 +70,38 @@ def extract_entities(text):
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
-        function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
-        result = json.loads(function_args)
+        try:
+            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+            raw_result = json.loads(function_args)
+            result = normalize_ner_structure(raw_result)
+        except Exception as e:
+            print("JSON parsing failed:", e)
+            result = empty_ner_structure()
     else:
-        print("Error:", response.text)
-        result = {
-            "Patient_Name": "",
-            "Symptoms": [],
-            "Diagnosis": "",
-            "Treatment": [],
-            "Current_Status": "",
-            "Prognosis": ""
-        }
+        print("API Error:", response.text)
+        result = empty_ner_structure()
 
     return result
+
+def normalize_ner_structure(raw):
+    """
+    Normalize the extracted entity result into correct key order
+    """
+    return {
+        "Patient_Name": raw.get("Patient_Name", ""),
+        "Symptoms": raw.get("Symptoms", []),
+        "Diagnosis": raw.get("Diagnosis", ""),
+        "Treatment": raw.get("Treatment", []),
+        "Current_Status": raw.get("Current_Status", ""),
+        "Prognosis": raw.get("Prognosis", "")
+    }
+
+def empty_ner_structure():
+    return {
+        "Patient_Name": "",
+        "Symptoms": [],
+        "Diagnosis": "",
+        "Treatment": [],
+        "Current_Status": "",
+        "Prognosis": ""
+    }
