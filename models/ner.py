@@ -16,7 +16,8 @@ kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 
 # Read Groq API key from environment variable
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-70b-8192"
+GROQ_MODEL = "llama3-8b-8192"
+
 
 # --- Keyword extraction function ---
 def extract_keywords(text, top_n=10):
