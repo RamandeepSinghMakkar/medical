@@ -66,7 +66,18 @@ In this project, we used:
 - **Sentiment Classification:** We used **Groq Llama3-8B API** to classify into **Anxious, Neutral, Reassured**.
 - **Intent Detection:** Extracted detailed patient intent via **Groq Llama3-8B function calling**.
 
-<img width="710" alt="image" src="https://github.com/user-attachments/assets/1955293a-79b4-42b0-b69b-e7d67fa4c6ad" />
+
+For Reference:
+For given sample text in the Assignment: 
+<img width="549" alt="image" src="https://github.com/user-attachments/assets/4555a3d2-3b81-4590-977d-58c7f9e6b7eb" />
+
+
+```bash
+Suppose for given text:
+I've been coughing for two days and have a slight fever.
+```
+**Output:**
+<img width="549" alt="image" src="https://github.com/user-attachments/assets/55ef2ef7-7057-4e57-ae05-4f989f17b9ab" />
 
 
 ---
@@ -192,7 +203,7 @@ pip install -r requirements.txt
 - Add your **Groq API key** inside the `.env` file like this:
 
 ```bash
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY="your_groq_api_key_here"
 ```
 
 ### 5. Run the Application:
