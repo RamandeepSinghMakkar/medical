@@ -4,10 +4,6 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 
-from transformers import AutoTokenizer, AutoModel
-
-bert_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-bert_model = AutoModel.from_pretrained("bert-base-uncased")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama3-8b-8192" 
