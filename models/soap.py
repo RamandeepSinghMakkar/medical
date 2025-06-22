@@ -3,40 +3,9 @@ import requests
 import json
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"  # or llama3-70b-8192 if needed
+GROQ_MODEL = "llama3-70b-8192"
 
 def generate_soap_note(text):
-    system_prompt = """
-You are a medical assistant. Analyze the following doctor-patient conversation and generate a SOAP note.
-
-Output strictly in valid JSON format using exactly this structure:
-
-{
-  "Subjective": {
-    "Chief_Complaint": "",
-    "History_of_Present_Illness": ""
-  },
-  "Objective": {
-    "Physical_Exam": "",
-    "Observations": ""
-  },
-  "Assessment": {
-    "Diagnosis": "",
-    "Severity": ""
-  },
-  "Plan": {
-    "Treatment": "",
-    "Follow-Up": ""
-  }
-}
-
-RULES:
-- Output ONLY valid JSON.
-- Do NOT include any explanation or extra text.
-- If any field is missing, leave it as empty string "".
-- Use proper JSON formatting with double quotes.
-"""
-
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
@@ -45,55 +14,73 @@ RULES:
     payload = {
         "model": GROQ_MODEL,
         "messages": [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": "You are a medical assistant."},
             {"role": "user", "content": text}
         ],
-        "temperature": 0.0,
-        "max_tokens": 1024
+        "functions": [
+            {
+                "name": "generate_soap",
+                "description": "Generate SOAP note based on conversation",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "Subjective": {
+                            "type": "object",
+                            "properties": {
+                                "Chief_Complaint": {"type": "string"},
+                                "History_of_Present_Illness": {"type": "string"}
+                            }
+                        },
+                        "Objective": {
+                            "type": "object",
+                            "properties": {
+                                "Physical_Exam": {"type": "string"},
+                                "Observations": {"type": "string"}
+                            }
+                        },
+                        "Assessment": {
+                            "type": "object",
+                            "properties": {
+                                "Diagnosis": {"type": "string"},
+                                "Severity": {"type": "string"}
+                            }
+                        },
+                        "Plan": {
+                            "type": "object",
+                            "properties": {
+                                "Treatment": {"type": "string"},
+                                "Follow-Up": {"type": "string"}
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "function_call": {"name": "generate_soap"},
+        "temperature": 0.0
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
         try:
-            raw_output = response.json()["choices"][0]["message"]["content"].strip()
-
-            # Clean accidental markdown formatting if any
-            if raw_output.startswith("```json"):
-                raw_output = raw_output.replace("```json", "").replace("```", "").strip()
-
-            parsed_output = json.loads(raw_output)
-
-            # Apply the patch function to flatten function-call style output
-            result = flatten_function_call_output(parsed_output)
-
+            function_args = response.json()["choices"][0]["message"]["function_call"]["arguments"]
+            result = json.loads(function_args)
         except Exception as e:
             print("JSON parsing failed:", e)
-            print("Model output:", raw_output)
-            result = empty_soap_structure()
+            result = {
+              "Subjective": {"Chief_Complaint": "", "History_of_Present_Illness": ""},
+              "Objective": {"Physical_Exam": "", "Observations": ""},
+              "Assessment": {"Diagnosis": "", "Severity": ""},
+              "Plan": {"Treatment": "", "Follow-Up": ""}
+            }
     else:
         print("API Error:", response.text)
-        result = empty_soap_structure()
+        result = {
+          "Subjective": {"Chief_Complaint": "", "History_of_Present_Illness": ""},
+          "Objective": {"Physical_Exam": "", "Observations": ""},
+          "Assessment": {"Diagnosis": "", "Severity": ""},
+          "Plan": {"Treatment": "", "Follow-Up": ""}
+        }
 
     return result
-
-
-# Patch function that flattens function calling structure
-def flatten_function_call_output(obj):
-    if isinstance(obj, dict):
-        if 'value' in obj:
-            return obj['value']
-        elif 'properties' in obj:
-            return {k: flatten_function_call_output(v) for k, v in obj['properties'].items()}
-        else:
-            return {k: flatten_function_call_output(v) for k, v in obj.items()}
-    return obj
-
-
-def empty_soap_structure():
-    return {
-        "Subjective": {"Chief_Complaint": "", "History_of_Present_Illness": ""},
-        "Objective": {"Physical_Exam": "", "Observations": ""},
-        "Assessment": {"Diagnosis": "", "Severity": ""},
-        "Plan": {"Treatment": "", "Follow-Up": ""}
-    }
