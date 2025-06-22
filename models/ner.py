@@ -5,18 +5,14 @@ import spacy
 from keybert import KeyBERT
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Load models
 nlp_spacy = spacy.load("en_core_web_sm")
 kw_model = KeyBERT(model='sentence-transformers/all-MiniLM-L6-v2')
 
-# Groq API details
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-70b-8192"   # You can also use 8b if you want lighter
+GROQ_MODEL = "llama3-70b-8192"   
 
-# --- Keyword extraction function ---
 def extract_keywords(text, top_n=10):
     doc = nlp_spacy(text)
     cleaned_text = " ".join([sent.text for sent in doc.sents])
@@ -24,7 +20,6 @@ def extract_keywords(text, top_n=10):
     keyword_list = [kw[0] for kw in keywords]
     return keyword_list
 
-# --- NER extraction function using FAST FUNCTION CALLING ---
 def extract_entities(text):
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -74,7 +69,6 @@ def extract_entities(text):
 
     return result
 
-# --- Normalization helper ---
 def normalize_array(field):
     if isinstance(field, list):
         return field

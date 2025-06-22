@@ -2,13 +2,16 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
-
-# Load environment variables
 load_dotenv()
 
-# Groq API details
+from transformers import AutoTokenizer, AutoModel
+
+bert_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+bert_model = AutoModel.from_pretrained("bert-base-uncased")
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"  # you can also test with llama3-70b-8192 if you want even higher quality
+GROQ_MODEL = "llama3-8b-8192" 
+
 
 def analyze_sentiment_intent(text):
     headers = {

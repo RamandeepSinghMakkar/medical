@@ -66,7 +66,7 @@ def generate_soap_note(text):
         try:
             function_args = response.json()["choices"][0]["message"]["function_call"]["arguments"]
             raw_result = json.loads(function_args)
-            # normalize result into fixed order
+            
             result = normalize_soap_structure(raw_result)
         except Exception as e:
             print("JSON parsing failed:", e)
