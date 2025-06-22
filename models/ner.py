@@ -24,86 +24,76 @@ def extract_keywords(text, top_n=10):
     keyword_list = [kw[0] for kw in keywords]
     return keyword_list
 
-# --- NER extraction using Groq optimized ---
+# --- NER extraction using Groq function calling ---
 def extract_entities(text):
-    summary = preprocess(text)
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    system_prompt = f"""
-You are a medical assistant. Extract key medical information from the following conversation and helpful extracted keywords/entities:
-
-Conversation: {text}
-
-Entities extracted: {summary['Entities']}
-Keywords extracted: {summary['Keywords']}
-
-Return output strictly in valid JSON format like this:
-
-{{
-  "Patient_Name": "",
-  "Symptoms": [],
-  "Diagnosis": "",
-  "Treatment": [],
-  "Current_Status": "",
-  "Prognosis": ""
-}}
-
-Rules:
-- Output only valid JSON.
-- If any field is missing, leave empty string or empty list.
-- Do NOT return numbered lists or dictionaries inside arrays.
-"""
-
     payload = {
         "model": GROQ_MODEL,
         "messages": [
-            {"role": "system", "content": system_prompt}
+            {"role": "system", "content": "You are a medical assistant."},
+            {"role": "user", "content": text}
         ],
-        "temperature": 0.0,
-        "max_tokens": 1024
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "extract_medical_entities",
+                    "description": "Extract relevant medical information from the conversation.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "Patient_Name": {"type": "string"},
+                            "Symptoms": {"type": "array", "items": {"type": "string"}},
+                            "Diagnosis": {"type": "string"},
+                            "Treatment": {"type": "array", "items": {"type": "string"}},
+                            "Current_Status": {"type": "string"},
+                            "Prognosis": {"type": "string"},
+                        },
+                        "required": [
+                            "Patient_Name", "Symptoms", "Diagnosis",
+                            "Treatment", "Current_Status", "Prognosis"
+                        ]
+                    }
+                }
+            }
+        ],
+        "tool_choice": {"type": "function", "function": {"name": "extract_medical_entities"}},
+        "temperature": 0.0
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
         try:
-            raw_output = response.json()["choices"][0]["message"]["content"].strip()
-            if raw_output.startswith("```json"):
-                raw_output = raw_output.replace("```json", "").replace("```", "").strip()
-            result = json.loads(raw_output)
-            return normalize_ner_structure(result)
+            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+            raw_result = json.loads(function_args)
+            result = normalize_ner_structure(raw_result)
         except Exception as e:
             print("JSON parsing failed:", e)
-            return empty_ner_structure()
+            result = empty_ner_structure()
     else:
-        print("Groq API Error:", response.text)
-        return empty_ner_structure()
+        print("API Error:", response.text)
+        result = empty_ner_structure()
 
-# --- Preprocessing ---
-def preprocess(text):
-    doc = nlp_spacy(text)
-    entities = [ent.text for ent in doc.ents]
-    keywords = extract_keywords(text, top_n=10)
-    return {
-        "Entities": entities,
-        "Keywords": keywords
-    }
+    return result
 
-# --- Normalization ---
+# --- Normalization helper ---
+def normalize_array(field):
+    if isinstance(field, list):
+        return field
+    if isinstance(field, dict):
+        try:
+            items = sorted(field.items(), key=lambda x: int(x[0]))
+            return [v for k, v in items]
+        except:
+            pass
+    return []
+
 def normalize_ner_structure(raw):
-    def normalize_array(field):
-        if isinstance(field, list):
-            return field
-        if isinstance(field, dict):
-            try:
-                items = sorted(field.items(), key=lambda x: int(x[0]))
-                return [v for k, v in items]
-            except:
-                pass
-        return []
     return {
         "Patient_Name": raw.get("Patient_Name", ""),
         "Symptoms": normalize_array(raw.get("Symptoms", [])),
