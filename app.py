@@ -17,7 +17,7 @@ text = st.text_area("Transcript", sample_text, height=400)
 task = st.selectbox("Select Task:", [
     "Task 1: Named Entity Recognition",
     "Task 2: Sentiment & Intent Analysis",
-    "Task 3: SOAP Note Generation (Bonus)"
+    "Task 3: SOAP Note Generation (Bonus),"
     "Task 4: Summarization"
 ])
 
