@@ -26,11 +26,12 @@ nlp_spacy = spacy.load("en_core_web_sm")
 # Sentiment model
 sentiment_model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
 sentiment_tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
-sentiment_model = AutoModelForSequenceClassification.from_pretrained(sentiment_model_name)
+sentiment_model = AutoModelForSequenceClassification.from_pretrained(sentiment_model_name).to("cpu")
+
 
 
 def classify_sentiment(sentence):
-    inputs = sentiment_tokenizer(sentence, return_tensors="pt", truncation=True)
+    inputs = sentiment_tokenizer(sentence, return_tensors="pt", truncation=True).to("cpu")
     outputs = sentiment_model(**inputs)
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
     probs = probs.detach().numpy()[0]
