@@ -29,7 +29,8 @@ Doctor – Good. In the meantime, try to eat a balanced diet and get regular exe
 Patient – I will do my best, doctor. Thank you.
 Doctor – You're welcome. Take care.
 ```
-Output: 
+**Output:**
+
 <img width="589" alt="image" src="https://github.com/user-attachments/assets/7d8b1ae3-2b64-4c48-8ef5-ce9e92a8a59f" />
 
 ---
@@ -128,7 +129,9 @@ Doctor: The current severity seems mild to moderate based on your symptoms and e
 Patient: Got it. Thank you, doctor.
 Doctor: You’re welcome. We’ll review the test results soon.
 ```
-OUPUT:
+
+**Output:**
+
 <img width="589" alt="image" src="https://github.com/user-attachments/assets/765863c3-d15b-41e1-9512-ff92687b7c44" />
 
 
