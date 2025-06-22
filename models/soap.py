@@ -3,7 +3,7 @@ import requests
 import json
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama3-8b-8192"  # or llama3-70b-8192 if needed
 
 def generate_soap_note(text):
     system_prompt = """
@@ -48,7 +48,8 @@ RULES:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text}
         ],
-        "temperature": 0.0
+        "temperature": 0.0,
+        "max_tokens": 1024
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
@@ -56,9 +57,16 @@ RULES:
     if response.status_code == 200:
         try:
             raw_output = response.json()["choices"][0]["message"]["content"].strip()
+
+            # Clean accidental markdown formatting if any
             if raw_output.startswith("```json"):
                 raw_output = raw_output.replace("```json", "").replace("```", "").strip()
-            result = json.loads(raw_output)
+
+            parsed_output = json.loads(raw_output)
+
+            # Apply the patch function to flatten function-call style output
+            result = flatten_function_call_output(parsed_output)
+
         except Exception as e:
             print("JSON parsing failed:", e)
             print("Model output:", raw_output)
@@ -68,6 +76,19 @@ RULES:
         result = empty_soap_structure()
 
     return result
+
+
+# Patch function that flattens function calling structure
+def flatten_function_call_output(obj):
+    if isinstance(obj, dict):
+        if 'value' in obj:
+            return obj['value']
+        elif 'properties' in obj:
+            return {k: flatten_function_call_output(v) for k, v in obj['properties'].items()}
+        else:
+            return {k: flatten_function_call_output(v) for k, v in obj.items()}
+    return obj
+
 
 def empty_soap_structure():
     return {
