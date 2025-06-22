@@ -6,6 +6,7 @@ from models.summarizer import summarize_text
 from models.sentiment import analyze_sentiment_intent
 from models.soap import generate_soap_note
 
+# Load sample file
 sample_text = open('sample.txt', 'r').read()
 
 st.title("🩺 Physician Note Generator")
@@ -18,7 +19,7 @@ task = st.selectbox("Select Task:", [
     "Task 1: Named Entity Recognition",
     "Task 2: Sentiment & Intent Analysis",
     "Task 3: SOAP Note Generation (Bonus)"
-    #"Task 4: Summarization"
+   # "Task 4: Summarization"
 ])
 
 if st.button("Run Task"):
