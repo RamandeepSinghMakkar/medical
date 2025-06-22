@@ -3,7 +3,7 @@ import requests
 import json
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"  # or llama3-70b-8192 if you want larger model
+GROQ_MODEL = "llama3-8b-8192"
 
 def generate_soap_note(text):
     system_prompt = """
@@ -48,19 +48,16 @@ RULES:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text}
         ],
-        "temperature": 0.0,
-        "max_tokens": 1024
+        "temperature": 0.0
     }
 
     response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
 
     if response.status_code == 200:
         try:
-            raw_output = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
-            # Clean any accidental formatting like code blocks
+            raw_output = response.json()["choices"][0]["message"]["content"].strip()
             if raw_output.startswith("```json"):
                 raw_output = raw_output.replace("```json", "").replace("```", "").strip()
-
             result = json.loads(raw_output)
         except Exception as e:
             print("JSON parsing failed:", e)
