@@ -37,16 +37,13 @@ Output:
 
 We handle ambiguous or missing medical data in multiple ways:
 
-✅ **LLM Function Calling:**  
+1) **LLM Function Calling:**  
 By using **Llama3 models with function calling via Groq API**, we allow the model to reason and return structured outputs even with partial or incomplete information. If any field is missing, we receive empty fields through our defined function structure.
-
-✅ **Post-Processing:**  
+2) **Post-Processing:**  
 In our code, we use normalization functions like `normalize_ner_structure()` and `empty_ner_structure()` to handle cases where the API may return incomplete or malformed data.
-
-✅ **Few-shot learning capability of LLM:**  
+3) **Few-shot learning capability of LLM:**  
 Large models like **Llama3-70B** can infer contextually missing data based on overall conversation, improving robustness.
-
-✅ **Default fallback structure:**  
+4) **Default fallback structure:**  
 We return consistent empty data structures for missing fields, ensuring downstream processes don’t fail.
 
 ---
@@ -55,8 +52,8 @@ We return consistent empty data structures for missing fields, ensuring downstre
 
 In this project, we used:
 
-✅ **facebook/bart-large-cnn** — for medical text summarization using HuggingFace `transformers` pipeline.  
-✅ **sentence-transformers/all-MiniLM-L6-v2** — indirectly used for keyword extraction via KeyBERT.
+1) **facebook/bart-large-cnn** — for medical text summarization using HuggingFace `transformers` pipeline.  
+2) **sentence-transformers/all-MiniLM-L6-v2** — indirectly used for keyword extraction via KeyBERT.
 
 ---
 
@@ -66,11 +63,9 @@ In this project, we used:
 
 - **Sentiment Classification:** We used **Groq Llama3-8B API** to classify into **Anxious, Neutral, Reassured**.
 - **Intent Detection:** Extracted detailed patient intent via **Groq Llama3-8B function calling**.
-- **Transformer Compliance:** Imported **BERT (bert-base-uncased)** to reflect Transformer usage, while inference happens via Groq for speed and accuracy.
 
 <img width="710" alt="image" src="https://github.com/user-attachments/assets/1955293a-79b4-42b0-b69b-e7d67fa4c6ad" />
-<img width="710" alt="image" src="https://github.com/user-attachments/assets/633eab11-1879-4ec9-acc8-1f7a86ac6612" />
-<img width="718" alt="image" src="https://github.com/user-attachments/assets/604e5d09-df19-47f4-964b-a0bf3493e99a" />
+
 
 ---
 
@@ -78,21 +73,13 @@ In this project, we used:
 
 We could fine-tune **bert-base-uncased** (or preferably **BioBERT**) as follows:
 
-1️⃣ **Collect domain-specific dataset:**  
+1) **Collect domain-specific dataset:**  
 Gather annotated patient-doctor conversations with labeled sentiment (Anxious, Neutral, Reassured) and intent (Seeking reassurance, etc.).
-
-2️⃣ **Preprocessing:**  
-Clean and tokenize medical conversations using **BERT tokenizer**.
-
-3️⃣ **Training:**  
+2) **Training:**  
 - Fine-tune BERT with a classification head for multi-class sentiment and intent classification.
 - Use cross-entropy loss.
 - Set early stopping to avoid overfitting due to small medical datasets.
-
-4️⃣ **Evaluation:**  
-Use stratified k-fold cross-validation due to limited data size.
-
-5️⃣ **Deployment:**  
+3) **Deployment:**  
 Export fine-tuned model and serve via HuggingFace or Torch pipelines.
 
 ---
@@ -101,22 +88,16 @@ Export fine-tuned model and serve via HuggingFace or Torch pipelines.
 
 Recommended datasets:
 
-✅ **MTSamples:**  
+1) **MTSamples:**  
 A collection of thousands of medical transcription samples.
-
-✅ **i2b2/UTHealth shared tasks datasets:**  
+2) **i2b2/UTHealth shared tasks datasets:**  
 Contains de-identified clinical narratives and annotations.
-
-✅ **n2c2 clinical NLP challenge datasets:**  
+3) **n2c2 clinical NLP challenge datasets:**  
 Well-annotated clinical datasets often used in academia.
-
-✅ **MIMIC-III or MIMIC-IV:**  
+4) **MIMIC-III or MIMIC-IV:**  
 Large publicly available de-identified ICU datasets from MIT.
-
-✅ **MedDialog Dataset (for patient-doctor dialogues):**  
+5) **MedDialog Dataset (for patient-doctor dialogues):**  
 Very helpful for intent and sentiment extraction from real dialogues.
-
-✅ **CLEF eHealth dataset** (for medical NER & concept extraction)
 
 ---
 
@@ -148,13 +129,11 @@ Doctor – You're welcome. Take care.
 There are two possible approaches:
 
 #### **Approach 1: Fine-tuning Large LLM (e.g., GPT or LLaMA)**
-
 - Collect large annotated datasets with conversation transcripts mapped into SOAP sections.
 - Fine-tune an LLM (like **Llama-3** or **GPT-4**) via supervised learning on these mappings.
 - This helps the model learn how to segment conversation flow into **Subjective, Objective, Assessment, Plan**.
 
 #### **Approach 2: Rule-based + Prompt Engineering (our current solution)**
-
 - Use few-shot prompting with **Groq Llama3-70B model**.
 - Provide explicit function calling with predefined JSON schemas.
 - Allow the model to structure output directly into SOAP format even without fine-tuning.
@@ -163,14 +142,12 @@ There are two possible approaches:
 
 ### QUES-2 **What rule-based or deep-learning techniques would improve the accuracy of SOAP note generation?**
 
-✅ **Rule-based Improvements:**
-
+1) **Rule-based Improvements:**
 - Use regex-based entity extraction for certain fields (e.g., lab values, dates).
 - Use pre-trained clinical concept extractors (e.g., **MetaMap**, **QuickUMLS**).
 - Incorporate sentence segmentation using **spaCy** for better context isolation.
 
-✅ **Deep Learning Improvements:**
-
+2) **Deep Learning Improvements:**
 - Use **ClinicalBERT** or **BioBERT** fine-tuned for SOAP generation tasks.
 - Apply **Seq2Seq models (T5, BART)** fine-tuned on annotated SOAP note datasets.
 - Incorporate **Reinforcement Learning with Human Feedback (RLHF)** to guide LLM output quality.
