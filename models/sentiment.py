@@ -1,70 +1,88 @@
-import spacy
-import torch
-import numpy as np
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import os
+import requests
+import json
+from dotenv import load_dotenv
 
-# Use CPU for Streamlit
-device = torch.device("cpu")
+# Load environment variables
+load_dotenv()
 
-# Load spaCy for sentence splitting
-nlp_spacy = spacy.load("en_core_web_sm")
+# Groq API credentials
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = "llama3-70b-8192"  # You can also try llama3-8b-8192
 
-# Load Sentiment Model
-sentiment_model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
-sentiment_tokenizer = AutoTokenizer.from_pretrained(sentiment_model_name)
-sentiment_model = AutoModelForSequenceClassification.from_pretrained(sentiment_model_name).to(device)
-
-# Load lightweight Intent Model (for now, reuse sentiment model as placeholder)
-intent_model_name = "bhadresh-savani/distilbert-base-uncased-emotion"
-intent_tokenizer = AutoTokenizer.from_pretrained(intent_model_name)
-intent_model = AutoModelForSequenceClassification.from_pretrained(intent_model_name).to(device)
-
-# Sentiment classification
-def classify_sentiment(sentence):
-    inputs = sentiment_tokenizer(sentence, return_tensors="pt", truncation=True).to(device)
-    outputs = sentiment_model(**inputs)
-    probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-    probs = probs.detach().cpu().numpy()[0]
-    label_id = np.argmax(probs)
-    if label_id + 1 <= 2:
-        return "Anxious"
-    elif label_id + 1 == 3:
-        return "Neutral"
-    else:
-        return "Reassured"
-
-# Intent classification (basic placeholder, replace with better model later)
-def classify_intent(sentence):
-    inputs = intent_tokenizer(sentence, return_tensors="pt", truncation=True).to(device)
-    outputs = intent_model(**inputs)
-    probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-    probs = probs.detach().cpu().numpy()[0]
-    label_id = np.argmax(probs)
-
-    # map model classes to your intents manually
-    label_map = {
-        0: "Reporting symptoms",
-        1: "Expressing concern",
-        2: "Seeking reassurance",
-        3: "General inquiry",
-        4: "Gratitude"
-    }
-    return label_map.get(label_id, "General inquiry")
-
-# Main analysis
 def analyze_sentiment_intent(text):
-    doc = nlp_spacy(text)
-    sentences = [sent.text for sent in doc.sents]
-    sentiments = []
-    intents = []
-    for sent_text in sentences:
-        sentiment = classify_sentiment(sent_text)
-        intent = classify_intent(sent_text)
-        sentiments.append(sentiment)
-        intents.append(intent)
-    final_sentiment = max(set(sentiments), key=sentiments.count)
-    final_intent = max(set(intents), key=intents.count)
-    return {
-        "Sentiment": final_sentiment,
-        "Intent": final_intent
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
+
+    # Few-shot system prompt to guide Groq model better:
+    system_prompt = """
+You are a medical assistant analyzing doctor-patient conversations.
+
+You must classify:
+
+1️⃣ Sentiment:  
+- "Anxious" (if the patient shows worry, fear, uncertainty, or anxiety)
+- "Neutral" (if the patient speaks factually without emotional cues)
+- "Reassured" (if the patient feels positive, hopeful, or confident)
+
+2️⃣ Intent:
+- "Seeking reassurance"
+- "Reporting symptoms"
+- "Expressing concern"
+- "General inquiry"
+- "Gratitude"
+
+Output strict valid JSON like:
+{"Sentiment":"", "Intent":""}
+
+### Examples:
+
+Example 1:
+Patient says: "I'm a bit worried about my back pain, but I hope it gets better soon."
+Output: {"Sentiment":"Anxious", "Intent":"Seeking reassurance"}
+
+Example 2:
+Patient says: "I've been coughing for the last 3 days and have a mild fever."
+Output: {"Sentiment":"Neutral", "Intent":"Reporting symptoms"}
+
+Example 3:
+Patient says: "Thank you so much, doctor."
+Output: {"Sentiment":"Reassured", "Intent":"Gratitude"}
+
+Example 4:
+Patient says: "Should I take this medication before or after food?"
+Output: {"Sentiment":"Neutral", "Intent":"General inquiry"}
+
+Now analyze the following conversation.
+"""
+
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ],
+        "temperature": 0.0,
+        "max_tokens": 512
+    }
+
+    response = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload)
+
+    if response.status_code == 200:
+        try:
+            model_output = response.json()["choices"][0]["message"]["content"].strip()
+            # Strip accidental code block formatting
+            if model_output.startswith("```json"):
+                model_output = model_output.replace("```json", "").replace("```", "").strip()
+            result = json.loads(model_output)
+        except Exception as e:
+            print("JSON parsing failed:", e)
+            print("Model Output:", model_output)
+            result = {"Sentiment": "", "Intent": ""}
+    else:
+        print("API Error:", response.text)
+        result = {"Sentiment": "", "Intent": ""}
+
+    return result
