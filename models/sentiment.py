@@ -1,59 +1,86 @@
-import spacy
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+import os
+import requests
+import json
+from dotenv import load_dotenv
 
-# Load spaCy for sentence splitting
-nlp_spacy = spacy.load("en_core_web_sm")
+# Load environment variables
+load_dotenv()
 
-# Load intent pipeline
-intent_model_name = "Falconsai/intent_classification"
-intent_pipeline = pipeline(
-    "text-classification",
-    model=intent_model_name,
-    tokenizer=intent_model_name,
-    device=-1  # CPU only
-)
-
-# Load sentiment pipeline
-sentiment_model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
-sentiment_pipeline = pipeline(
-    "text-classification",
-    model=sentiment_model_name,
-    tokenizer=sentiment_model_name,
-    device=-1  # CPU only
-)
-
-def classify_intent(sentences):
-    results = intent_pipeline(sentences, batch_size=16, truncation=True)
-    return [res['label'] for res in results]
-
-def classify_sentiment(sentences):
-    results = sentiment_pipeline(sentences, batch_size=16, truncation=True)
-    output = []
-    for res in results:
-        label = res['label']  # e.g., "3 stars"
-        score = int(label.split()[0])
-        if score <= 2:
-            output.append("Anxious")
-        elif score == 3:
-            output.append("Neutral")
-        else:
-            output.append("Reassured")
-    return output
+# Groq API details
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_MODEL = "llama3-8b-8192"  # you can also test with llama3-70b-8192 if you want even higher quality
 
 def analyze_sentiment_intent(text):
-    doc = nlp_spacy(text)
-    sentences = [sent.text for sent in doc.sents]
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
 
-    if not sentences:
-        return {"Sentiment": "Neutral", "Intent": "General inquiry"}
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a medical assistant. Analyze the doctor-patient conversation "
+                    "and classify the patient's sentiment and intent."
+                )
+            },
+            {"role": "user", "content": text}
+        ],
+        "tools": [
+            {
+                "type": "function",
+                "function": {
+                    "name": "classify_sentiment_intent",
+                    "description": "Classify patient sentiment and intent.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "Sentiment": {
+                                "type": "string",
+                                "enum": ["Anxious", "Neutral", "Reassured"]
+                            },
+                            "Intent": {
+                                "type": "string",
+                                "enum": [
+                                    "Seeking reassurance",
+                                    "Reporting symptoms",
+                                    "Expressing concern",
+                                    "General inquiry",
+                                    "Gratitude"
+                                ]
+                            }
+                        },
+                        "required": ["Sentiment", "Intent"]
+                    }
+                }
+            }
+        ],
+        "tool_choice": {"type": "function", "function": {"name": "classify_sentiment_intent"}},
+        "temperature": 0.0
+    }
 
-    intents = classify_intent(sentences)
-    sentiments = classify_sentiment(sentences)
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers=headers, json=payload
+    )
 
-    final_sentiment = max(set(sentiments), key=sentiments.count)
-    final_intent = max(set(intents), key=intents.count)
+    if response.status_code == 200:
+        try:
+            function_args = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
+            result = json.loads(function_args)
+        except Exception as e:
+            print("Parsing failed:", e)
+            result = empty_sentiment_structure()
+    else:
+        print("API Error:", response.text)
+        result = empty_sentiment_structure()
 
+    return result
+
+def empty_sentiment_structure():
     return {
-        "Sentiment": final_sentiment,
-        "Intent": final_intent
+        "Sentiment": "",
+        "Intent": ""
     }
