@@ -33,7 +33,7 @@ Output:
 
 ---
 
-### ❓ **How would you handle ambiguous or missing medical data in the transcript?**
+### QUES-1 **How would you handle ambiguous or missing medical data in the transcript?**
 
 We handle ambiguous or missing medical data in multiple ways:
 
@@ -51,7 +51,7 @@ We return consistent empty data structures for missing fields, ensuring downstre
 
 ---
 
-### ❓ **What pre-trained NLP models would you use for medical summarization?**
+### QUES-2 **What pre-trained NLP models would you use for medical summarization?**
 
 In this project, we used:
 
@@ -74,7 +74,7 @@ In this project, we used:
 
 ---
 
-### ❓ **How would you fine-tune BERT for medical sentiment detection?**
+### QUES-1 **How would you fine-tune BERT for medical sentiment detection?**
 
 We could fine-tune **bert-base-uncased** (or preferably **BioBERT**) as follows:
 
@@ -97,7 +97,7 @@ Export fine-tuned model and serve via HuggingFace or Torch pipelines.
 
 ---
 
-### ❓ **What datasets would you use for training a healthcare-specific sentiment model?**
+### QUES-2 **What datasets would you use for training a healthcare-specific sentiment model?**
 
 Recommended datasets:
 
@@ -143,26 +143,39 @@ Doctor – You're welcome. Take care.
 ```
 
 
-❓ How would you train an NLP model to map medical transcripts into SOAP format?
+### QUES-1 **How would you train an NLP model to map medical transcripts into SOAP format?**
+
 There are two possible approaches:
-Approach 1: Fine-tuning Large LLM (e.g., GPT or LLaMA)
-Collect large annotated datasets with conversation transcripts mapped into SOAP sections.
-Fine-tune an LLM (like Llama-3 or GPT-4) via supervised learning on these mappings.
-This helps the model learn how to segment conversation flow into Subjective, Objective, Assessment, Plan.
-Approach 2: Rule-based + Prompt Engineering (our current solution)
-Use few-shot prompting with Groq Llama3-70B model.
-Provide explicit function calling with predefined JSON schemas.
-Allow the model to structure output directly into SOAP format even without fine-tuning.
-❓ What rule-based or deep-learning techniques would improve the accuracy of SOAP note generation?
-✅ Rule-based Improvements:
-Use regex-based entity extraction for certain fields (e.g., lab values, dates).
-Use pre-trained clinical concept extractors (e.g., MetaMap, QuickUMLS).
-Incorporate sentence segmentation using spaCy for better context isolation.
-✅ Deep Learning Improvements:
-Use ClinicalBERT or BioBERT fine-tuned for SOAP generation tasks.
-Apply Seq2Seq models (T5, BART) fine-tuned on annotated SOAP note datasets.
-Incorporate Reinforcement Learning with Human Feedback (RLHF) to guide LLM output quality.
-Use Chain-of-Thought prompting to improve reasoning during complex SOAP mappings.
+
+#### **Approach 1: Fine-tuning Large LLM (e.g., GPT or LLaMA)**
+
+- Collect large annotated datasets with conversation transcripts mapped into SOAP sections.
+- Fine-tune an LLM (like **Llama-3** or **GPT-4**) via supervised learning on these mappings.
+- This helps the model learn how to segment conversation flow into **Subjective, Objective, Assessment, Plan**.
+
+#### **Approach 2: Rule-based + Prompt Engineering (our current solution)**
+
+- Use few-shot prompting with **Groq Llama3-70B model**.
+- Provide explicit function calling with predefined JSON schemas.
+- Allow the model to structure output directly into SOAP format even without fine-tuning.
+
+---
+
+### QUES-2 **What rule-based or deep-learning techniques would improve the accuracy of SOAP note generation?**
+
+✅ **Rule-based Improvements:**
+
+- Use regex-based entity extraction for certain fields (e.g., lab values, dates).
+- Use pre-trained clinical concept extractors (e.g., **MetaMap**, **QuickUMLS**).
+- Incorporate sentence segmentation using **spaCy** for better context isolation.
+
+✅ **Deep Learning Improvements:**
+
+- Use **ClinicalBERT** or **BioBERT** fine-tuned for SOAP generation tasks.
+- Apply **Seq2Seq models (T5, BART)** fine-tuned on annotated SOAP note datasets.
+- Incorporate **Reinforcement Learning with Human Feedback (RLHF)** to guide LLM output quality.
+- Use **Chain-of-Thought prompting** to improve reasoning during complex SOAP mappings.
+
 
 
 
@@ -184,7 +197,16 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application:
+### 4. Setup Environment Variables
+
+- Create a `.env` file in the root directory.
+- Add your **Groq API key** inside the `.env` file like this:
+
+```bash
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+### 5. Run the Application:
 
 ```bash
 streamlit run app.py
