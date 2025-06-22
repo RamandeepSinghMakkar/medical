@@ -56,7 +56,7 @@ RULES:
 
     if response.status_code == 200:
         try:
-            raw_output = response.json()["choices"][0]["message"]["content"].strip()
+            raw_output = response.json()["choices"][0]["message"]["tool_calls"][0]["function"]["arguments"]
             # Clean any accidental formatting like code blocks
             if raw_output.startswith("```json"):
                 raw_output = raw_output.replace("```json", "").replace("```", "").strip()
