@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 import torch
 import numpy as np
 
-intent_clf = pipeline("text-classification", model="Falconsai/intent_classification")
+intent_clf = pipeline("text-classification", model="Falconsai/intent_classification", device=-1)
 
 # Our defined intent labels
 intent_labels = [
