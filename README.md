@@ -18,6 +18,8 @@ For reference:
 For given sample text in the Assignment:  
 <img width="638" alt="image" src="https://github.com/user-attachments/assets/e27ebb3d-56df-4924-9158-6fc0376fdcf8" />
 
+---
+
 ```bash
 Suppose for given text:
 Patient – Good afternoon, Doctor.
@@ -29,11 +31,11 @@ Doctor – Good. In the meantime, try to eat a balanced diet and get regular exe
 Patient – I will do my best, doctor. Thank you.
 Doctor – You're welcome. Take care.
 ```
+
 **Output:**
 
 <img width="589" alt="image" src="https://github.com/user-attachments/assets/7d8b1ae3-2b64-4c48-8ef5-ce9e92a8a59f" />
 
----
 
 ### QUES-1 **How would you handle ambiguous or missing medical data in the transcript?**
 
@@ -48,7 +50,6 @@ Large models like **Llama3-70B** can infer contextually missing data based on ov
 4) **Default fallback structure:**  
 We return consistent empty data structures for missing fields, ensuring downstream processes don’t fail.
 
----
 
 ### QUES-2 **What pre-trained NLP models would you use for medical summarization?**
 
@@ -71,16 +72,18 @@ For Reference:
 For given sample text in the Assignment: 
 <img width="549" alt="image" src="https://github.com/user-attachments/assets/4555a3d2-3b81-4590-977d-58c7f9e6b7eb" />
 
+---
 
 ```bash
 Suppose for given text:
 I've been coughing for two days and have a slight fever.
 ```
+
 **Output:**
+
 <img width="549" alt="image" src="https://github.com/user-attachments/assets/55ef2ef7-7057-4e57-ae05-4f989f17b9ab" />
 
 
----
 
 ### QUES-1 **How would you fine-tune BERT for medical sentiment detection?**
 
@@ -95,7 +98,6 @@ Gather annotated patient-doctor conversations with labeled sentiment (Anxious, N
 3) **Deployment:**  
 Export fine-tuned model and serve via HuggingFace or Torch pipelines.
 
----
 
 ### QUES-2 **What datasets would you use for training a healthcare-specific sentiment model?**
 
@@ -161,8 +163,6 @@ There are two possible approaches:
 - Provide explicit function calling with predefined JSON schemas.
 - Allow the model to structure output directly into SOAP format even without fine-tuning.
 
----
-
 ### QUES-2 **What rule-based or deep-learning techniques would improve the accuracy of SOAP note generation?**
 
 1) **Rule-based Improvements:**
@@ -177,7 +177,7 @@ There are two possible approaches:
 - Use **Chain-of-Thought prompting** to improve reasoning during complex SOAP mappings.
 
 
-
+---
 
 ## 📦 Setup Instructions
 
